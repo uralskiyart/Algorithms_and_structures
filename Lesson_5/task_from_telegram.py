@@ -18,7 +18,8 @@ def pie_parts(aa, bb):
                 return i
 
 
-
+print('0' * 0)
+print(30 // 16)
 print(pie_parts(82546920, 48539250))
 
 

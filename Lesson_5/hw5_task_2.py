@@ -3,86 +3,92 @@
 # Например, пользователь ввёл A2 и C4F. Нужно сохранить их как [‘A’, ‘2’] и [‘C’, ‘4’, ‘F’]
 # соответственно. Сумма чисел из примера: [‘C’, ‘F’, ‘1’], произведение - [‘7’, ‘C’, ‘9’, ‘F’, ‘E’].
 
-from collections import deque, Counter
+from collections import deque
+
+HEX_NUMBERS = '0123456789ABCDEF'
+
+DEC_NUMBERS = {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5,
+               '6': 6, '7': 7, '8': 8, '9': 9, 'A': 10, 'B': 11,
+               'C': 12, 'D': 13, 'E': 14, 'F': 15}
 
 
-def hexadecimal_sum(a, b):
-    numbers16 = '0123456789ABCDEF0123456789ABCDEF'
-    c = deque()
-    k = 0
-    average = len(a) if len(a) >= len(b) else len(b)
+BASE = 16
 
-    for i in range(1, average + 1):
-        try:
-            a_digit_idx = numbers16.index(a[-i]) # находим первое вхождение символа в массиве данных
-            b_digit_idx = numbers16.index(b[-i])
-            c.appendleft(numbers16[a_digit_idx + b_digit_idx + k])
-            k = 1 if a_digit_idx + b_digit_idx + k > 15 else 0
+def sum_hex(first, second):
+    first = first.copy()
+    second = second.copy()
 
-            if k == 1 and average == i:
-                c.appendleft(k)
+    if len(second) > len(first):
+        first, second = second, first
 
-        except IndexError:
-            if len(a) > len(b):
-                a_digit_idx = numbers16.index(a[-i])
-                c.appendleft(numbers16[a_digit_idx + k])
-                k = 1 if a_digit_idx + k > 15 else 0
+    second.extendleft('0' * (len(first) - len(second)))
 
+    result = deque()
+    overflow = 0
+
+    while len(first) != 0:
+        first_num = DEC_NUMBERS[first.pop()]
+        second_num = DEC_NUMBERS[second.pop()]
+
+        result_num = first_num + second_num + overflow
+
+        if result_num >= BASE:
+            overflow = 1
+            result_num -= BASE
+        else:
+            overflow = 0
+
+        result.appendleft(HEX_NUMBERS[result_num])
+
+    if overflow == 1:  # is_overflow = True or False
+        result.appendleft('1')
+
+    return result
+
+
+def mult_hex(first, second):
+
+    if len(second) > len(first):
+        first, second = second, first
+
+    overflow = 0
+    spam = deque()
+    result = deque('0' * len(first))
+
+    for i in range(1, len(second) +1):
+        second_num = DEC_NUMBERS[second[-i]]
+        overflow = 0
+
+        for j in range(1, len(first) + 1):
+            first_num = DEC_NUMBERS[first[-j]]
+            result_num = first_num * second_num + overflow
+
+            if result_num >= BASE:
+                overflow = result_num // 16
+                result_num %= 16
             else:
-                b_digit_idx = numbers16.index(b[-i])
-                c.appendleft(numbers16[b_digit_idx + k])
-                k = 1 if b_digit_idx + k > 15 else 0
+                overflow = 0
+            spam.appendleft(HEX_NUMBERS[result_num])
 
-            if k == 1 and average == i:
-                c.appendleft(k)
+        if overflow > 0:
+            spam.appendleft(HEX_NUMBERS[overflow])
 
-    return list(c)
+        spam.extend('0' * (i - 1))
+        result.extendleft('0' * (i-1))
 
+        result = sum_hex(result, spam)
+        spam.clear()
 
-# def hexadecimal_mul(a, b):
-#     numbers16 = '0123456789ABCDEF'
-#     spam = deque()
-#     dict_for_sum = {}
-#     k = 0
-#
-#     for i in range(1, len(b) + 1):
-#         for j in range(1, len(a) + 1):
-#             a_digit_idx = numbers16.index(a[-j])
-#             b_digit_idx = numbers16.index(b[-i])
-#             spam.appendleft(numbers16[(a_digit_idx * b_digit_idx + k) % 16])
-#             k = (a_digit_idx * b_digit_idx) // 16 if a_digit_idx * b_digit_idx + k > 15 else 0
-#
-#         if k > 0:
-#             spam.appendleft(numbers16[k])
-#
-#         dict_for_sum[i] = deque(spam)
-#         print(dict_for_sum)
-#         spam.clear()
-#         k = 0
-#         print(len(dict_for_sum))
-#
-#         for i in range(1, len(dict_for_sum) + 1):
-#             pass
-#
-#     return dict_for_sum
-
-
-
+    return result
 
 print(hex(int('fa2', 16) + int('ffA', 16)))
 print(hex(int('A2', 16) * int('C4F', 16)))
 
-a = ['A', '2']
-b = ['C', '4', 'F']
+a = deque(['A', '2'])
+b = deque(['C', '4', 'F'])
 
-print(hexadecimal_sum(a, b))
+print(sum_hex(a, b))
+print(mult_hex(a, b))
 
 
-# a = ['0','9', '7', 'E']
-# b = ['0', '8', '8', '0']
-# c = hexadecimal_sum(a, b)
-# a = ['7', '9', '8']
-#
-# print(c)
-# print(hexadecimal_sum(c, a))
 
